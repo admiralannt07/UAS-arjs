@@ -1,109 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>AR.js Dragon Ball</title>
-    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.6.0/dist/aframe-extras.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Ball Super AR Project</title>
+    <meta name="description" content="Experience Dragon Ball characters in augmented reality with complex 3D animations powered by AR.js">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in-up': 'fadeInUp 1s ease-out',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(30px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' },
+                            '100%': { boxShadow: '0 0 30px rgba(139, 92, 246, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-      body {
-          margin: 0;
-          overflow: hidden;
-          font-family: 'Arial', sans-serif;
-      }
-      .controls {
-          position: absolute;
-          bottom: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 10;
-          display: flex;
-          gap: 10px;
-          background-color: rgba(0, 0, 0, 0.5);
-          padding: 15px;
-          border-radius: 15px;
-          flex-wrap: wrap;
-          justify-content: center;
-      }
-      .control-group {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 5px;
-      }
-      .control-group h3 {
-          margin: 0;
-          color: white;
-          font-size: 16px;
-      }
-      .control-group button {
-          padding: 10px 15px;
-          font-size: 14px;
-          cursor: pointer;
-          background-color: #ff9800;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          transition: background-color 0.3s;
-      }
-      .control-group button:hover {
-          background-color: #f57c00;
-      }
-  </style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        .font-orbitron {
+            font-family: 'Ubuntu', monospace;
+        }
+        
+        .shine-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shine-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+            z-index: 1;
+        }
+        
+        .shine-effect:hover::before {
+            left: 100%;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 3s ease infinite;
+        }
+        
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .floating-orb {
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .floating-orb:nth-child(2) {
+            animation-delay: -2s;
+        }
+        
+        .floating-orb:nth-child(3) {
+            animation-delay: -4s;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .backdrop-blur-custom {
+            backdrop-filter: blur(10px);
+        }
+    </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
-    <a-assets>
-      <a-asset-item id="jiren" src="model/Jiren_final.glb"></a-asset-item>
-      <a-asset-item id="goku_black" src="model/Goku_black_final.glb"></a-asset-item>
-      <audio id="jiren-punch" src="audio/jiren_punch.MP3" preload="auto"></audio>
-      <audio id="jiren-powerup" src="audio/jiren_powerup.MP3" preload="auto"></audio>
-      <audio id="goku-punch" src="audio/goku_punch.MP3" preload="auto"></audio>
-      <audio id="goku-powerup" src="audio/goku_powerup.MP3" preload="auto"></audio>
-    </a-assets>
+<body class="bg-slate-900 text-white font-orbitron">
+    <!-- Welcome Screen -->
+    <div id="welcomeScreen" class="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center transition-all duration-500">
+        <div class="text-center">
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-8 animate-pulse">
+                <span class="gradient-text">Welcome to the</span>
+            </h1>
+            <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white animate-bounce">
+                <span class="bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                    Dragon Ball Super
+                </span>
+            </h2>
+            <h3 class="text-2xl md:text-4xl lg:text-5xl font-bold text-white mt-4">
+                <span class="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    AR Project
+                </span>
+            </h3>
+            <div class="mt-8 flex justify-center">
+                <div class="w-16 h-16 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        </div>
+    </div>
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
-      
-      <a-marker preset="hiro">
-        <a-entity
-          id="jiren_model" position="-0.8 0 0"
-          scale="1 1 1"
-          rotation="0 90 0"
+    <!-- Main Landing Page -->
+    <div id="mainPage" class="opacity-0 transition-opacity duration-1000">
+        <!-- Navbar -->
+        <nav id="navbar" class="fixed top-0 left-0 right-0 z-40 transition-all duration-300">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="text-2xl font-bold">
+                        <span class="gradient-text">DB AR</span>
+                    </div>
+                    <div class="hidden md:flex space-x-8">
+                        <a href="#home" class="hover:text-blue-400 transition-colors duration-300">Home</a>
+                        <a href="#about" class="hover:text-blue-400 transition-colors duration-300">About</a>
+                        <a href="#showcase" class="hover:text-blue-400 transition-colors duration-300">Showcase</a>
+                        <a href="#contact" class="hover:text-blue-400 transition-colors duration-300">Contact</a>
+                    </div>
+                    <div class="flex space-x-4">
+                        <a href="https://github.com/admiralannt07/UAS-arjs.git" target="_blank">
+                            <svg class="w-6 h-6 hover:text-blue-400 cursor-pointer transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                        </a>
+                        <svg class="w-6 h-6 hover:text-blue-400 cursor-pointer transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
-          gltf-model="#jiren"
-          animation-mixer="clip: Animation_13; loop: repeat;">
-          
-        </a-entity>
-        <a-entity
-          id="goku_black_model" position="0.8 0 0"
-          scale="1 1 1"
-          rotation="0 -90 0"
+        <!-- Hero Section -->
+        <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+            <!-- Animated Background -->
+            <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900/50 to-blue-900/50" data-aos="fade-in">
+                <div class="absolute inset-0 opacity-30">
+                    <div class="floating-orb absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500"></div>
+                    <div class="floating-orb absolute top-3/4 right-1/4 w-96 h-96 bg-purple-500" style="animation-delay: -2s;"></div>
+                    <div class="floating-orb absolute bottom-1/4 left-1/2 w-96 h-96 bg-cyan-500" style="animation-delay: -4s;"></div>
+                </div>
+            </div>
 
-          gltf-model="#goku_black"
-          animation-mixer="clip: Animation_113; loop: repeat;">         
-        </a-entity>
-      </a-marker>
+            <div class="relative z-10 text-center px-6 max-w-6xl mx-auto">
+                <div data-aos="fade-up" data-aos-duration="1000">
+                    <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold mb-6">
+                        <span class="gradient-text">Dragon Ball Super</span>
+                    </h1>
+                    <h2 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-8">
+                        <span class="bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                            AR Experience
+                        </span>
+                    </h2>
+                    <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed" data-aos="fade-up" data-aos-delay="200">
+                        Showcasing the power of AR.js with complex 3D model animations. Experience your favorite Dragon Ball characters 
+                        come to life in augmented reality with stunning visual effects and smooth animation sequences.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up" data-aos-delay="400">
+                        <button class="shine-effect relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 animate-glow">
+                            <span class="relative z-10 flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                Experience AR
+                            </span>
+                        </button>
+                        <button class="group px-8 py-4 border-2 border-blue-400 rounded-full font-semibold text-lg transition-all duration-300 hover:bg-blue-400 hover:text-slate-900">
+                            <span class="flex items-center justify-center gap-2">
+                                Learn More
+                                <svg class="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-      <a-entity camera></a-entity>
-    </a-scene>
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                </svg>
+            </div>
+        </section>
 
-    <!-- UI Controls -->
-    <div class="controls">
-      <div class="control-group">
-          <h3>Jiren</h3>
-          <button id="jiren-idle-btn">Idle</button>
-          <button id="jiren-attack-btn">Attack Combo</button>
-          <button id="jiren-powerup-btn">Power Up</button>
-      </div>
-      <div class="control-group">
-          <h3>Goku Black</h3>
-          <button id="goku-idle-btn">Idle</button>
-          <button id="goku-attack-btn">Attack</button>
-          <button id="goku-transform-btn">Power Up</button>
-      </div>
-    </div> 
+        <!-- Showcase Section -->
+        <section id="showcase" class="py-20 bg-gradient-to-b from-slate-900 to-slate-800">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                        <span class="gradient-text">Project Showcase</span>
+                    </h2>
+                    <p class="text-xl text-gray-300 max-w-3xl mx-auto">
+                        Dive into the world of augmented reality with our Dragon Ball Super AR experience. 
+                        Witness complex 3D animations powered by AR.js technology.
+                    </p>
+                </div>
 
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-8" data-aos="fade-right" data-aos-duration="800">
+                        <div class="space-y-4">
+                            <h3 class="text-3xl font-bold text-white">AR.js 3D Animation Demo</h3>
+                            <p class="text-gray-300 text-lg leading-relaxed">
+                                This project demonstrates the capabilities of AR.js in handling complex 3D models with intricate 
+                                animation sequences. Experience your favorite Dragon Ball characters with realistic movements, 
+                                special effects, and interactive elements that respond to your environment.
+                            </p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <h4 class="text-xl font-semibold text-blue-400">Key Features:</h4>
+                            <ul class="space-y-2 text-gray-300">
+                                <li class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                    Complex 3D character models with high-quality textures
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                                    Smooth animation sequences and interactive sound effects
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                                    Interactive AR experience with gesture controls
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-orange-400 rounded-full"></div>
+                                    Cross-platform compatibility potential for mobile devices
+                                </li>
+                            </ul>
+                        </div>
+
+                        <a href="AR-main.html" class="shine-effect inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full font-semibold text-lg text-slate-900 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/25">
+                            <span class="relative z-10">Launch AR Experience</span>
+                            <svg class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    <div class="relative" data-aos="fade-left" data-aos-duration="800">
+                        <div class="aspect-video bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl overflow-hidden border border-blue-400/20 shadow-2xl">
+                            <img 
+                                src="./images/thumbnail.png" 
+                                alt="AR Experience Preview"
+                                class="w-full h-full object-cover opacity-80"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent"></div>
+                            <div class="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full">
+                                LIVE
+                            </div>
+                            <div class="absolute bottom-4 left-4 right-4">
+                                <div class="flex items-center gap-2 text-white">
+                                    <div class="w-12 h-12 bg-white/20 rounded-full p-3 backdrop-blur-sm cursor-pointer hover:bg-white/30 transition-colors flex items-center justify-center">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold">Dragon Ball AR Demo</div>
+                                        <div class="text-sm text-gray-300">Interactive 3D Experience</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Floating Elements -->
+                        <div class="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full opacity-20 blur-xl animate-pulse"></div>
+                        <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-full opacity-20 blur-xl animate-pulse" style="animation-delay: 1s;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer id="contact" class="bg-slate-950 py-12 border-t border-slate-800">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-3 gap-8" data-aos="fade-up" data-aos-duration="600">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4">
+                            <span class="gradient-text">DB AR Project</span>
+                        </h3>
+                        <p class="text-gray-400 mb-4">
+                            Pushing the boundaries of web-based augmented reality with cutting-edge 3D animations and interactive experiences.
+                        </p>
+                        <div class="flex space-x-4">
+                            <svg class="w-6 h-6 hover:text-blue-400 cursor-pointer transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            <svg class="w-6 h-6 hover:text-blue-400 cursor-pointer transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                            <svg class="w-6 h-6 hover:text-blue-400 cursor-pointer transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-blue-400">Quick Links</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#home" class="hover:text-white transition-colors">Home</a></li>
+                            <li><a href="#about" class="hover:text-white transition-colors">About</a></li>
+                            <li><a href="#showcase" class="hover:text-white transition-colors">Showcase</a></li>
+                            <li><a href="AR-main.html" class="hover:text-white transition-colors">AR Experience</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-blue-400">Technology</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li>AR.js Framework</li>
+                            <li>Three.js 3D Engine</li>
+                            <li>WebGL Rendering</li>
+                            <li>Mobile Optimization</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="border-t border-slate-800 mt-8 pt-8 text-center text-gray-400" data-aos="fade-up" data-aos-delay="200">
+                    <p>&copy; 2025 Dragon Ball Super AR Project. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
